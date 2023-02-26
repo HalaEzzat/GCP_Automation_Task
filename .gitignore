@@ -1,0 +1,10 @@
+# ignore all .a files
+*.terraform
+.terraform/
+.terraform/**
+project*
+projectdata/
+
+startup/ssh
+startup/ssh/*
+startup/id*

@@ -1,0 +1,76 @@
+- name: Configure target machine
+  hosts: target
+  remote_user: hala
+  become: yes
+  tasks:
+    - name: Disable automatic updates
+      shell: |
+        sudo apt-get update -y
+        sudo apt-get install -y tcpdump tcpreplay
+        sudo systemctl disable --now unattended-upgrades
+
+    - name: Configure dummy interface
+      shell: |
+        sudo ip link add replay type dummy
+        sudo ip link set replay promisc on
+        sudo ip link set dev replay up
+
+    - name: Add forescout user
+      user:
+        name: forescout
+        createhome: yes
+        shell: /bin/bash
+        password_lock: true
+        groups: sudo
+        append: yes
+
+    - name: Add forescout user SSH key
+      authorized_key:
+        user: forescout
+        key: "{{ lookup('file', '/tmp/forescout/ssh/id_rsa.pub') }}"
+
+    - name: Add forescout user to the sudoers
+      copy:
+        dest: "/etc/sudoers.d/forescout"
+        content: "forescout  ALL=(ALL)  NOPASSWD: ALL"
+
+    
+    - name: Copy PCAP file to target machine
+      copy:
+        src: "/home/hala/smallFlows.pcap"
+        dest: "/home/forescout/smallFlows.pcap"
+        owner: forescout
+        group: forescout
+        mode: "0600"
+
+- name: replay task
+  hosts: target
+  remote_user: forescout
+  become: yes
+  vars:
+    ansible_ssh_private_key_file: "/tmp/forescout/ssh/id_rsa"
+  tasks:
+    - name: Replay PCAP file
+      shell: "sudo tcpreplay -i replay --loop=0 /home/forescout/smallFlows.pcap &"
+      register: tcpreplay_process
+
+    - name: Start tcpdump on replay interface
+      shell: "sudo nohup tcpdump -i replay -w /home/forescout/capture.pcap &"
+      register: tcpdump_process
+
+    - name: Get size of capture.pcap
+      command: "du -h /home/forescout/capture.pcap"
+      register: capture_size
+
+    - name: Print capture.pcap size
+      debug:
+        var: capture_size.stdout
+
+    #using this part here will remove the captur.pcap file
+    #- name: Remove capture.pcap
+    #file:
+    #  path: "/home/forescout/capture.pcap"
+    #  state: absent
+    #become: true
+
+    #using the processes name : "tcpreplay_process" ,"tcpdump_process" you can then stop/start/restart the processes
