@@ -76,8 +76,9 @@ dumps it to a file called ‘capture.pcap’ in the Forescout user’s home fold
 - remove 'capture.pcap'
 - stop/start/restart the tcpdump and tcpreplay processes at any time
 
-Other solutions I though about: Using Packer instead of ansible since I'm already using terraform
-Using docker for the tcp replay and tcpdump processes to be able to stop/start/restart any time
+## Other solutions I though about: 
+- Using Packer instead of ansible since I'm already using terraform
+- Using docker for the tcp replay and tcpdump processes to be able to stop/start/restart any time
 
 ## Prerequisite:
 
