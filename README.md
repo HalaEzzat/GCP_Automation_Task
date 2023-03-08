@@ -1,4 +1,4 @@
-# Forescout Task: GCP Automation
+# GCP Automation
 
 ### Introduction
 In this challenge you will automate a set of tasks on Google Cloud Platform and a Linux (Ubuntu 20.04)
